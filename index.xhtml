@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions">
+<h:head>
+    <title>Index</title>
+    <link rel="stylesheet" href="css/codemirror.css" />
+    <link rel="stylesheet" href="css/merge.css" />
+    <script src="js/codemirror.js"></script>
+    <script src="js/javascript.js"></script>
+    <script src="js/diff_match_patch.js"></script>
+    <script src="js/merge.js"></script>
+</h:head>
+<h:body>
+    <h:form id="mainForm">
+        <p:panel id="panel" header="Form" style="margin-bottom:10px;">
+            <div class="ui-grid">
+                <div class="ui-grid-row">
+                    <div class="ui-grid-col-6">
+                        <!--                         <h:inputHidden id="editor1" value="#{fileCompareController.text1}" autoResize="false" rows="5" cols="50" />
+ -->
+                        <p:outputLabel id="panel1" escape="false" style="display: none" value="#{fileCompareController.text1}"></p:outputLabel>
+                    </div>
+                    <div class="ui-grid-col-6">
+                        <!--                         <h:inputHidden id="editor1" value="#{fileCompareController.text2}" autoResize="false" rows="5" cols="50" />
+ -->
+                        <p:outputLabel id="panel2" escape="false" style="display: none" value="#{fileCompareController.text2}"></p:outputLabel>
+                    </div>
+                </div>
+            </div>
+        </p:panel>
+        <div id="placeholder"></div>
+        <script type="text/javascript">
+									/* $('panal1').getElementById("mainForm:editor1").value;
+									$('panal2').getElementById("mainForm:editor2").value; */
+									dv = CodeMirror
+											.MergeView(document.getElementById("placeholder"),
+													{
+														value : document.getElementById("mainForm:panel1").innerHTML,
+														orig : document.getElementById("mainForm:panel2").innerHTML,
+														lineNumbers : true,
+														mode : "text/x-markdown",
+														highlightDifferences : true
+													});
+								</script>
+        <div class="ui-grid">
+            <div class="ui-grid-row">
+                <div class="ui-grid-col-2">
+                    <p:commandButton value="ExtractionRep" action="ExtractionRep.xhtml?faces-redirect=true"></p:commandButton>
+                </div>
+                <div class="ui-grid-col-8"></div>
+                <div class="ui-grid-col-2">
+                    <p:commandButton value="showRepositories" action="showRepositories.xhtml?faces-redirect=true"></p:commandButton>
+                </div>
+            </div>
+        </div>
+    </h:form>
+</h:body>
+</html>
