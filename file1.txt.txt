@@ -1,3 +1,16 @@
 Hello world 
 File 1
 from git
+
+-startup
+plugins/org.eclipse.equinox.launcher_1.3.200.v20151021-1308.jar
+-product
+org.springsource.sts.ide
+--launcher.defaultAction
+openFile
+--launcher.library
+plugins/org.eclipse.equinox.launcher.win32.win32.x86_64_1.1.300.v20160316-1445
+-vmargs
+-Dosgi.requiredJavaVersion=1.8
+-Xverify:none
+-Dorg.eclipse.swt.browser.IEVersion=10001

@@ -1,0 +1,227 @@
+			Git options for commit and push and pull
+			
+			
+	// add a file 
+	DirCache index = git.add().addFilePattern( "readme.txt" ).call();
+	
+	// commit of files 
+	RevCommit commit = git.commit().setMessage( "Create readme file" ).call();
+
+	
+	// how to remove files from local directory
+	DirCache index = git.rm().addFilepattern( "readme.txt" ).call();
+
+	// publishing all modifications that took place in local repository
+	Iterable<PushResult> iterable = local.push().call();
+	PushResult pushResult = iterable.iterator().next();
+	Status status  = pushResult.getRemoteUpdate( "refs/heads/master" ).getStatus();
+	
+	//pullCommand for JGit
+	private IStatus doPull(IProgressMonitor monitor) throws IOException, GitAPIException, CoreException {
+	ProgressMonitor gitMonitor = new EclipseGitProgressTransformer(monitor);
+	Repository db = null;
+	try {
+		db = FileRepositoryBuilder.create(GitUtils.getGitDir(path));
+		Git git = Git.wrap(db);
+		PullCommand pc = git.pull();
+		pc.setProgressMonitor(gitMonitor);
+		pc.setCredentialsProvider(credentials);
+		pc.setTransportConfigCallback(new TransportConfigCallback() {
+			@Override
+			public void configure(Transport t) {
+				credentials.setUri(t.getURI());
+				if (t instanceof TransportHttp && cookie != null) {
+					HashMap<String, String> map = new HashMap<String, String>();
+					map.put(GitConstants.KEY_COOKIE, cookie.getName() + "=" + cookie.getValue());
+					((TransportHttp) t).setAdditionalHeaders(map);
+				}
+			}
+		});
+		PullResult pullResult = pc.call();
+
+		if (monitor.isCanceled()) {
+			return new Status(IStatus.CANCEL, GitActivator.PI_GIT, "Cancelled");
+		}
+
+		// handle result
+		if (pullResult.isSuccessful()) {
+			return Status.OK_STATUS;
+		}
+		FetchResult fetchResult = pullResult.getFetchResult();
+
+		IStatus fetchStatus = FetchJob.handleFetchResult(fetchResult);
+		if (!fetchStatus.isOK()) {
+			return fetchStatus;
+		}
+
+		MergeStatus mergeStatus = pullResult.getMergeResult().getMergeStatus();
+		if (!mergeStatus.isSuccessful())
+			return new Status(IStatus.ERROR, GitActivator.PI_GIT, mergeStatus.name());
+	} finally {
+		if (db != null) {
+			db.close();
+		}
+	}
+	return Status.OK_STATUS;
+}
+
+
+
+/* another senario */
+
+
+	  private void commit(Git git, String message) {
+	   CommitCommand commit =git.commit(); 
+	   try { 
+	   commit.setMessage(message).call();
+	    } catch (NoHeadException e) { 
+	    throw new RuntimeException(e); 
+	    } catch (NoMessageException e) {
+	     throw new RuntimeException(e); 
+	     } catch(UnmergedPathException e) { 
+	     throw new RuntimeException(e); 
+	    } catch(ConcurrentRefUpdateException e) { 
+	     throw new RuntimeException(e);
+	      } catch(JGitInternalException e) {
+	      throw new RuntimeException(e);
+	        } catch(WrongRepositoryStateException e) {
+	        throw new RuntimeException(e); 
+	         }
+	          }
+	         
+		private void add(Git git, String pathToAdd) {
+		AddCommand add = git.add();
+		try {
+	   	add.addFilepattern(pathToAdd).call();
+		} catch (NoFilepatternException e) {
+	    throw new RuntimeException(e);
+		}
+    	}
+    	
+    	private void changeContent(Git git, String content, String message) {
+		File myfile = new File(gitworkDir, "file1.txt");
+		writeToFile(myfile, content);
+
+		addAndCommit(git, message, ".");
+    	}
+    	
+    	 private void addAndCommit(Git git, String message, String pathToAdd) {
+		add(git, pathToAdd);
+		commit(git, message);
+	    }
+
+	  /////// ***************************************** ///////////////
+	  
+	  public class GitClient {
+
+private String remoteRepositoryUI;
+private String localRepositoryPath;
+private Git localGit;
+private UsernamePasswordCredentialsProvider credentialsProvider;
+
+public GitClient(String remoteRepositoryURI, String localRepositoryPath, 
+        String user, String password) {
+    this.credentialsProvider = new UsernamePasswordCredentialsProvider(user, password);
+    this.remoteRepositoryUI = remoteRepositoryURI;
+    this.localRepositoryPath = localRepositoryPath; 
+}
+
+
+
+public File getFile(String repositoryFilePath, Branch branch) throws Exception {
+    switchBranch(branch);
+    return new File(this.localRepositoryPath + File.separator + repositoryFilePath);
+}
+
+private void switchBranch(Branch branch) throws InvalidRemoteException, TransportException, IOException, GitAPIException {
+    if(!isInitialized())
+        initialize(branch);
+
+   String branchName = branch.toString();
+	boolean branchExists = localGit.getRepository().getRef(branchName) != null;
+	if (!branchExists) {
+		localGit.branchCreate()
+			.setName(branchName)
+			.setUpstreamMode(SetupUpstreamMode.TRACK)
+			.setStartPoint("origin/" + branchName)
+			.call();
+}
+	localGit.checkout().setName(branchName).call();
+   // localGit.fetch().call();
+    localGit.pull();
+}
+
+private boolean isInitialized() {
+    return this.localGit != null;
+}
+
+private void initialize(Branch branch) throws IOException, 
+            InvalidRemoteException, TransportException, GitAPIException {
+    boolean localRepositoryExists = true;
+    try {
+        this.localGit = Git.open(new File(this.localRepositoryPath));  
+    } catch(IOException e) {
+        localRepositoryExists = false;
+    }
+
+    if(!localRepositoryExists) {
+        List<String> branchesToClone = new LinkedList<String>();
+        for(Branch aBranch : Branch.values())
+            branchesToClone.add(aBranch.toString());
+        Git.cloneRepository()
+        // set the branches to clone from remote to local repository
+        .setBranchesToClone(branchesToClone)
+        // set the initial branch to check out and where to place HEAD
+        .setBranch("refs/heads/" + branch.toString())
+        // provide the URI of the remote repository from where to clone
+        .setURI(this.remoteRepositoryUI)
+        // set local store location of the cloned repository
+        .setDirectory(new File(this.localRepositoryPath))
+        .call();
+
+        this.localGit = Git.open(new File(this.localRepositoryPath));
+        for(Branch aBranch : Branch.values()) {
+            boolean branchExists = localGit.getRepository().getRef(aBranch.toString()) != null;
+            if (!branchExists) {
+                localGit.branchCreate()
+                    .setName(aBranch.toString())
+                    .setUpstreamMode(SetupUpstreamMode.TRACK)
+                    .setStartPoint("origin/" + aBranch.toString())
+                    .call();
+            }
+            localGit.checkout().setName(aBranch.toString()).call();
+        }
+    }
+}
+
+public static void main(String[] args) throws Exception {
+    GitClient clientA = new GitClient("URLToRepository.git",
+            "local", "username", "password");
+    GitClient clientB = new GitClient("URLToRepository.git",
+            "localB", "username", "password");
+
+    clientA.addFile("fileA1", "fileA1", Branch.master, "clientA1");
+    clientB.addFile("fileB1", "fileB1", Branch.master, "clientB1");
+    clientB.addFile("fileB2", "fileB2", Branch.development, "clientB2");
+    clientA.addFile("fileA2", "fileA2", Branch.development, "clientA2");
+    clientA.addFile("fileA3", "fileA3", Branch.master, "clientA3");
+
+    File file = clientA.getFile("fileA1", Branch.master);
+    System.out.println(file.getAbsolutePath() + " " + file.exists());
+
+    file = clientA.getFile("fileA2", Branch.development);
+    System.out.println(file.getAbsolutePath() + " " + file.exists());
+
+    file = clientA.getFile("fileA3", Branch.master);
+    System.out.println(file.getAbsolutePath() + " " + file.exists());
+
+    file = clientA.getFile("fileB1", Branch.master);
+    System.out.println(file.getAbsolutePath() + " " + file.exists());
+
+    file = clientA.getFile("fileB2", Branch.development);
+    System.out.println(file.getAbsolutePath() + " " + file.exists());
+}
+
+}
+	
+ 
