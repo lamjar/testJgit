@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui" xmlns:ui="http://java.sun.com/jsf/facelets">
+<h:head>
+    <title>Extraction</title>
+</h:head>
+<h:body>
+    <h:form id="mainForm">
+        <p:panel id="panel" header="Get a copy from a repository " style="margin-bottom:10px;">
+            <p:growl id="growl" sticky="true" showDetail="true" life="3000" />
+            <p:panelGrid columns="2">
+                <p:outputPanel>
+                    <p:outputLabel for="rep1" value="URL repository:" />
+                    <p:inputText id="rep1" value="#{fileCompareController.rep1}"  />
+                </p:outputPanel>
+                
+                <p:outputPanel>
+                    <p:outputLabel for="User" value="Your Name :" />
+                    <p:inputText id="User" value="#{fileCompareController.username}"  />
+                    
+               </p:outputPanel>
+                
+               <p:outputPanel>
+                    <p:outputLabel for="Pass" value="Your Password :" />
+                    <p:password id="Pass" value="#{fileCompareController.pass}" size="30" />
+                </p:outputPanel>
+                
+                  <p:outputPanel>
+                    <p:outputLabel for="localPath" value="Local Path :" />
+                    <p:inputText  id="localPath" value="#{fileCompareController.localRepository}" />
+                </p:outputPanel>
+                 
+                  <p:outputPanel>
+                    <p:outputLabel for="chosen_Branch" value="Your Branch :"></p:outputLabel>
+                    <p:inputText id="chosen_Branch" immediate="true" value="#{fileCompareController.brancheChosen}"></p:inputText>
+               </p:outputPanel>
+                
+                 
+                 <p:commandButton value="Pull from repository" actionListener="#{fileCompareController.downloadRep}" />
+                 <p:commandButton value="Pull from repository" actionListener="#{fileCompareController.pullRemoteHEAD}" />
+                 
+               
+            </p:panelGrid>
+        </p:panel>
+        <div class="ui-grid">
+            <div class="ui-grid-row">
+                <div class="ui-grid-col-2">
+                    <p:commandButton value="index" action="index.xhtml?faces-redirect=true"></p:commandButton>
+                </div>
+                <div class="ui-grid-col-8"></div>
+                <div class="ui-grid-col-2">
+                    <p:commandButton value="showRepositories" action="showRepositories.xhtml?faces-redirect=true"></p:commandButton>
+                </div>
+            </div>
+        </div>
+    </h:form>
+</h:body>
+</html>
