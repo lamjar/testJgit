@@ -3,5 +3,3 @@ File 1
 from git
 
 it is about to get changed here.
-
-this is writen today thursday 5 mars 2016.
