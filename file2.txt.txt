@@ -1,6 +1,3 @@
 Hello taieb.
 File 2
 from cvs
-
-
-this is writen today 5 mars 2016 in file2.txt.
